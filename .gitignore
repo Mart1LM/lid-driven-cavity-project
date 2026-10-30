@@ -1,0 +1,18 @@
+# Environnements virtuels Python
+venv/
+env/
+.env/
+__pycache__/
+*.pyc
+
+# Fichiers de résultats CFD et images (trop lourds pour Git)
+results/
+*.vtk
+*.csv
+*.dat
+*.png
+
+# Fichiers système et éditeurs
+.DS_Store
+.vscode/
+.idea/
