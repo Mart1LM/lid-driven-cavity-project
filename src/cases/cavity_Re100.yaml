@@ -1,0 +1,23 @@
+# Cavité entraînée, Re = 100 (adimensionné : Lx = Ly = U0 = rho = 1, donc nu = 1/Re)
+Lx: 1.0
+Ly: 1.0
+nx: 65
+ny: 65
+rho: 1.0
+Re: 100.0
+U0: 1.0
+ramp_time: 0.0
+t_end: 40.0
+cfl: 0.4
+fourier: 0.2
+dt_max: 1.0e-2          # écrire 1.0e-2 (pas 1e-2 : YAML le lirait comme du texte)
+time_scheme: rk2_heun   # euler | rk2_heun
+advection_scheme: upwind1   # upwind1 | centered2
+diffusion_method: explicit  # explicit (adi plus tard)
+poisson_solver: sor     # jacobi | sor
+tol: 1.0e-6
+maxiter: 5000
+omega: 1.7
+steady_tol: 1.0e-6      # 0.0 = critère d'arrêt désactivé
+every_n_steps: 100
+out_dir: results/Re100
