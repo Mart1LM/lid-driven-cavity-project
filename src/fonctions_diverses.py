@@ -85,8 +85,8 @@ def ghia_reference(Re: float, data_dir: str = "data") -> dict:
     for f in (fu, fv):
         if not os.path.exists(f):
             raise FileNotFoundError(f"Données de Ghia absentes : {f} (voir la docstring)")
-    y, u = np.loadtxt(fu, delimiter=",", skiprows=1, unpack=True)
-    x, v = np.loadtxt(fv, delimiter=",", skiprows=1, unpack=True)
+    y, u = np.loadtxt(fu, delimiter=";", skiprows=0, unpack=True)
+    x, v = np.loadtxt(fv, delimiter=";", skiprows=0, unpack=True)
     return {"y": y, "u": u, "x": x, "v": v}
  
  
