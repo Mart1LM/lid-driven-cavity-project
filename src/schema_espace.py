@@ -9,7 +9,7 @@ def upwind1(phi, u, v, dx, dy):
 
     La derivee est decentree du cote d'ou vient l'information : difference
     arriere si la vitesse locale est positive, avant sinon. Seuls les noeuds
-    interieurs sont calcules ; les noeuds de paroi restent a zero.
+    interieurs sont calcules.
 
     Parameters
     ----------
@@ -26,7 +26,7 @@ def upwind1(phi, u, v, dx, dy):
 
     Returns
     -------
-    conv : numpy.ndarray, shape (nx, ny)
+    phi_new: numpy.ndarray, shape (nx, ny)
         Valeur de u dphi/dx + v dphi/dy aux nouds interieurs, 0 sur les parois.
     """
     nx, ny = phi.shape
@@ -55,7 +55,7 @@ def upwind1(phi, u, v, dx, dy):
 @njit
 def centered2(phi, u, v, dx, dy):
     """
-    Terme convectif u·dphi/dx + v·dphi/dy, differences centrees d'ordre 2.
+    Differences centrees d'ordre 2.
 
     Instable avec Euler explicite : a utiliser avec RK2 au minimum.
 
@@ -72,9 +72,9 @@ def centered2(phi, u, v, dx, dy):
     dy : float
         Pas d'espace en y.
 
-    Returns
+    Returns 
     -------
-    conv : numpy.ndarray, shape (nx, ny)
+    phi_new : numpy.ndarray, shape (nx, ny)
         Valeur de u·dphi/dx + v·dphi/dy aux nœuds interieurs, 0 sur les parois.
     """
     nx, ny = phi.shape
@@ -89,7 +89,7 @@ def centered2(phi, u, v, dx, dy):
     return phi_new
 
 
-# SPACE_SCHEMES = {"upwind1": upwind1, "centered2": centered2}
+SPACE_SCHEMES = {"upwind1": upwind1, "centered2": centered2}
 
 
 # def convective_term(phi, u, v, dx, dy, scheme):
@@ -120,3 +120,101 @@ def centered2(phi, u, v, dx, dy):
 #     if scheme not in SPACE_SCHEMES:
 #         raise ValueError(f"Schema d'espace inconnu : {scheme}")
 #     return SPACE_SCHEMES[scheme](phi, u, v, dx, dy)
+
+
+@njit
+def derivative_x(phi, dx):
+    """
+    Dérivée première en x, différences centrées d'ordre 2.
+
+    dphi/dx[i, j] = (phi[i+1, j] - phi[i-1, j]) / (2 dx)
+
+    Seuls les nœuds intérieurs sont calculés ; les nœuds de paroi restent à zéro.
+
+    Parameters
+    ----------
+    phi : numpy.ndarray, shape (nx, ny)
+        Champ à dériver (u, v ou p).
+    dx : float
+        Pas d'espace en x.
+
+    Returns
+    -------
+    dphi_dx : numpy.ndarray, shape (nx, ny)
+        Dérivée en x aux nœuds intérieurs, 0 sur les parois.
+    """
+    nx, ny = phi.shape
+    dphi_dx = np.zeros((nx, ny))
+
+    for i in range(1, nx - 1):
+        for j in range(1, ny - 1):
+            dphi_dx[i, j] = (phi[i + 1, j] - phi[i - 1, j]) / (2.0 * dx)
+
+    return dphi_dx
+
+
+@njit
+def derivative_y(phi, dy):
+    """
+    Dérivée première en y, différences centrées d'ordre 2.
+
+    dphi/dy[i, j] = (phi[i, j+1] - phi[i, j-1]) / (2 dy)
+
+    Seuls les nœuds intérieurs sont calculés ; les nœuds de paroi restent à zéro.
+
+    Parameters
+    ----------
+    phi : numpy.ndarray, shape (nx, ny)
+        Champ à dériver (u, v ou p).
+    dy : float
+        Pas d'espace en y.
+
+    Returns
+    -------
+    dphi_dy : numpy.ndarray, shape (nx, ny)
+        Dérivée en y aux nœuds intérieurs, 0 sur les parois.
+    """
+    nx, ny = phi.shape
+    dphi_dy = np.zeros((nx, ny))
+
+    for i in range(1, nx - 1):
+        for j in range(1, ny - 1):
+            dphi_dy[i, j] = (phi[i, j + 1] - phi[i, j - 1]) / (2.0 * dy)
+
+    return dphi_dy
+
+
+@njit
+def divergence(u, v, dx, dy):
+    """
+    Divergence de la vitesse : du/dx + dv/dy, centrée d'ordre 2.
+
+    Somme de derivative_x(u, dx) et derivative_y(v, dy). Nulle sur les
+    nœuds de paroi.
+
+    Parameters
+    ----------
+    u : numpy.ndarray, shape (nx, ny)
+        Composante x de la vitesse.
+    v : numpy.ndarray, shape (nx, ny)
+        Composante y de la vitesse.
+    dx : float
+        Pas d'espace en x.
+    dy : float
+        Pas d'espace en y.
+
+    Returns
+    -------
+    div : numpy.ndarray, shape (nx, ny)
+        Divergence aux nœuds intérieurs, 0 sur les parois.
+    """
+    nx, ny = u.shape
+    du_dx = derivative_x(u, dx)
+    dv_dy = derivative_y(v, dy)
+    div = np.zeros((nx, ny))
+
+    for i in range(1, nx - 1):
+        for j in range(1, ny - 1):
+            div[i, j] = du_dx[i, j] + dv_dy[i, j]
+
+    return div
