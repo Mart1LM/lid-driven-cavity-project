@@ -91,35 +91,40 @@ def centered2(phi, u, v, dx, dy):
 
 SPACE_SCHEMES = {"upwind1": upwind1, "centered2": centered2}
 
+def laplacian(phi, dx, dy):
+    """
+    Laplacien d'un champ, différences centrées d'ordre 2 à 3 points.
 
-# def convective_term(phi, u, v, dx, dy, scheme):
-#     """
-#     Calcule u·dphi/dx + v·dphi/dy avec le schema choisi par son nom.
+    laplacian[i, j] = (phi[i+1, j] - 2 phi[i, j] + phi[i-1, j]) / dx^2
+                    + (phi[i, j+1] - 2 phi[i, j] + phi[i, j-1]) / dy^2
 
-#     Parameters
-#     ----------
-#     phi : numpy.ndarray, shape (nx, ny)
-#         Champ transporte (u ou v).
-#     u, v : numpy.ndarray, shape (nx, ny)
-#         Composantes de la vitesse d'advection.
-#     dx, dy : float
-#         Pas d'espace en x et en y.
-#     scheme : str
-#         Nom du schema, cle de SPACE_SCHEMES (par["advection_scheme"]).
+    Seuls les nœuds intérieurs sont calculés ; les nœuds de paroi restent
+    à zéro. Ce schéma est fixe : il ne dépend pas du schéma d'advection.
 
-#     Returns
-#     -------
-#     numpy.ndarray, shape (nx, ny)
-#         Terme convectif, nul sur les nœuds de paroi.
+    Parameters
+    ----------
+    phi : numpy.ndarray, shape (nx, ny)
+        Champ à dériver (u ou v).
+    dx : float
+        Pas d'espace en x.
+    dy : float
+        Pas d'espace en y.
 
-#     Raises
-#     ------
-#     ValueError
-#         Si le nom du schema est inconnu.
-#     """
-#     if scheme not in SPACE_SCHEMES:
-#         raise ValueError(f"Schema d'espace inconnu : {scheme}")
-#     return SPACE_SCHEMES[scheme](phi, u, v, dx, dy)
+    Returns
+    -------
+    lapl : numpy.ndarray, shape (nx, ny)
+        Laplacien aux nœuds intérieurs, 0 sur les parois.
+    """
+    nx, ny = phi.shape
+    lapl = np.zeros((nx, ny))
+
+    for i in range(1, nx - 1):
+        for j in range(1, ny - 1):
+            d2phi_dx2 = (phi[i + 1, j] - 2.0 * phi[i, j] + phi[i - 1, j]) / (dx * dx)
+            d2phi_dy2 = (phi[i, j + 1] - 2.0 * phi[i, j] + phi[i, j - 1]) / (dy * dy)
+            lapl[i, j] = d2phi_dx2 + d2phi_dy2
+
+    return lapl
 
 
 @njit
@@ -218,3 +223,4 @@ def divergence(u, v, dx, dy):
             div[i, j] = du_dx[i, j] + dv_dy[i, j]
 
     return div
+

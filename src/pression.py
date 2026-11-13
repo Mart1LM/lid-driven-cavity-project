@@ -154,7 +154,7 @@ def compute_divergence(u, v, dx, dy, par):
     Retourne : div, tableau (nx, ny), nul sur les nœuds de paroi.
     """
     div_scheme, _ = get_pressure_schemes(par)
-    return divergence(u, v, dx, dy, scheme=div_scheme)
+    return divergence(u, v, dx, dy)
 
 
 def compute_pressure_gradient(p, dx, dy, par):
@@ -169,8 +169,8 @@ def compute_pressure_gradient(p, dx, dy, par):
     Retourne : (dpdx, dpdy), deux tableaux (nx, ny), nuls sur les parois.
     """
     _, grad_scheme = get_pressure_schemes(par)
-    dpdx = derivative_x(p, dx, scheme=grad_scheme)
-    dpdy = derivative_y(p, dy, scheme=grad_scheme)
+    dpdx = derivative_x(p, dx)
+    dpdy = derivative_y(p, dy)
     return dpdx, dpdy
 
 

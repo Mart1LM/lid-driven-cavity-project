@@ -41,10 +41,10 @@ CONVENTIONS (voir INTERFACES.md)
 - La CL de vitesse est appliquée à l'instant t + dt (fin du pas), comme dans
   pression.py. t est l'instant au DÉBUT du pas.
 """
-from schemas_espace import convective_term
+
 from schemas_temps_explicite import get_time_scheme
 from conditions_limite import apply_bc_velocity
-
+from schemas_espace import SPACE_SCHEMES
 
 # Schémas d'advection espace+temps couplés : nom -> fonction ayant la signature
 #   f(u, v, t, dt, dx, dy, par) -> (u_star, v_star)
@@ -52,6 +52,34 @@ from conditions_limite import apply_bc_velocity
 COUPLED_ADVECTION_STEPS = {}
 
 
+def convective_term(phi, u, v, dx, dy, scheme):
+    """
+    Calcule u·dphi/dx + v·dphi/dy avec le schema choisi par son nom.
+
+    Parameters
+    ----------
+    phi : numpy.ndarray, shape (nx, ny)
+        Champ transporte (u ou v).
+    u, v : numpy.ndarray, shape (nx, ny)
+        Composantes de la vitesse d'advection.
+    dx, dy : float
+        Pas d'espace en x et en y.
+    scheme : str
+        Nom du schema, cle de SPACE_SCHEMES (par["advection_scheme"]).
+
+    Returns
+    -------
+    numpy.ndarray, shape (nx, ny)
+        Terme convectif, nul sur les nœuds de paroi.
+
+    Raises
+    ------
+    ValueError
+        Si le nom du schema est inconnu.
+    """
+    if scheme not in SPACE_SCHEMES:
+        raise ValueError(f"Schema d'espace inconnu : {scheme}")
+    return SPACE_SCHEMES[scheme](phi, u, v, dx, dy)
 def F_advection(q, dx, dy, par):
     """
     Second membre de l'équation de transport : dq/dt = F(q) = -(u.grad)q.
