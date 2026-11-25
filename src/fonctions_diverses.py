@@ -198,4 +198,27 @@ def load_fields(path: str):
     """Relit un fichier écrit par save_fields. Retourne (u, v, p, t, n)."""
     d = np.load(path)
     return d["u"], d["v"], d["p"], float(d["t"]), int(d["n"])
- 
+
+def make_run_dir(par):
+    """
+    Construit le chemin du sous-dossier de sortie d'une simulation.
+
+    Le nom du sous-dossier résume les paramètres principaux du cas
+    (Reynolds, grille, schémas, solveur de Poisson), par exemple
+    results/Re100_65x65_rk2_heun_upwind1_sor.
+
+    Parameters
+    ----------
+    par : dict
+        Dictionnaire des paramètres lu dans le .yml (clés Re, nx, ny,
+        time_scheme, advection_scheme, poisson_solver, out_dir).
+
+    Returns
+    -------
+    run_dir : str
+        Chemin du sous-dossier, de la forme out_dir/<nom_du_cas>.
+    """
+    name = (f"Re{par['Re']:g}_{par['nx']}x{par['ny']}"
+            f"_{par['time_scheme']}_{par['advection_scheme']}"
+            f"_{par['poisson_solver']}")
+    return os.path.join(par["out_dir"], name)

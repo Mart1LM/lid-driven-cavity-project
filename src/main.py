@@ -17,6 +17,7 @@ import fonctions_diverses as fd
 import advection
 import diffusion
 import pression
+
  
  
 def advance_one_step(u, v, p, t, dt, dx, dy, par):
@@ -37,7 +38,9 @@ def main(config_path: str):
     t, n = 0.0, 0
     cl.apply_bc_velocity(u, v, t, par)           # le couvercle est en place dès t = 0
     os.makedirs(par["out_dir"], exist_ok=True)
- 
+    out = fd.make_run_dir(par)                       # <- nouveau : sous-dossier du cas
+    os.makedirs(out, exist_ok=True)               # <- remplace makedirs(par["out_dir"], ...)
+    print(f"Sorties dans : {out}")
     history = {"t": [], "res_steady": [], "div_max": [], "ke": []}
     print(f"Cas : Re = {par['Re']:g}, grille {par['nx']}x{par['ny']}, "
           f"dx = {dx:.3e}, nu = {par['nu']:.3e}")
@@ -62,7 +65,7 @@ def main(config_path: str):
             print("Régime stationnaire atteint.")
             break
  
-    out = par["out_dir"]
+    
     fd.save_fields(os.path.join(out, "fields.npz"), u, v, p, t, n)
     fd.plot_velocity(u, v, x, y, os.path.join(out, "velocity.png"))
     fd.plot_streamlines(u, v, x, y, os.path.join(out, "streamlines.png"))

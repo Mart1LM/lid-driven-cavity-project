@@ -23,7 +23,7 @@ EXPECTED = {
 
 # Noms de méthodes autorisés (à compléter au fil du projet)
 ALLOWED_NAMES = {
-    "time_scheme": ["euler", "rk2_heun"],
+    "time_scheme": ["euler", "rk2_heun","rk4"],
     "advection_scheme": ["upwind1", "centered2"],
     "diffusion_method": ["explicit"],          # plus tard : "adi"
     "poisson_solver": ["jacobi", "sor"],
