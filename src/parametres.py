@@ -18,7 +18,7 @@ EXPECTED = {
     "t_end": float, "cfl": float, "fourier": float, "dt_max": float,
     "time_scheme": str, "advection_scheme": str, "diffusion_method": str,
     "poisson_solver": str, "tol": float, "maxiter": int, "omega": float,
-    "steady_tol": float, "every_n_steps": int, "out_dir": str,
+    "steady_tol": float, "every_n_steps": int, "out_dir": str,"snapshot_every_n_steps":int
 }
 
 # Noms de méthodes autorisés (à compléter au fil du projet)

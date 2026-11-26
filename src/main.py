@@ -37,6 +37,14 @@ def main(config_path: str):
     u, v, p = fd.init_fields(par["nx"], par["ny"])
     t, n = 0.0, 0
     cl.apply_bc_velocity(u, v, t, par)           # le couvercle est en place dès t = 0
+        # Stockage des instantanés pour l'animation
+    snapshot_every = par.get("snapshot_every_n_steps", par["every_n_steps"])
+
+    snapshots = [{
+        "t": t,
+        "u": u.copy(),
+        "v": v.copy()
+    }]
     os.makedirs(par["out_dir"], exist_ok=True)
     out = fd.make_run_dir(par)                       # <- nouveau : sous-dossier du cas
     os.makedirs(out, exist_ok=True)               # <- remplace makedirs(par["out_dir"], ...)
@@ -53,7 +61,14 @@ def main(config_path: str):
         u, v, p = u_new, v_new, p_new
         t += dt
         n += 1
- 
+        # Enregistrement périodique des champs
+        if n % snapshot_every == 0:
+            snapshots.append({
+                "t": t,
+                "u": u.copy(),
+                "v": v.copy()
+            })
+    
         if n % par["every_n_steps"] == 0:
             history["t"].append(t)
             history["res_steady"].append(res_steady)
@@ -64,12 +79,32 @@ def main(config_path: str):
         if res_steady < par["steady_tol"]:        # steady_tol = 0 : critère désactivé
             print("Régime stationnaire atteint.")
             break
- 
+    # Ajout du dernier état si celui-ci n'a pas déjà été enregistré
+    if snapshots[-1]["t"] != t:
+        snapshots.append({
+            "t": t,
+            "u": u.copy(),
+            "v": v.copy()
+        })
     
     fd.save_fields(os.path.join(out, "fields.npz"), u, v, p, t, n)
     fd.plot_velocity(u, v, x, y, os.path.join(out, "velocity.png"))
     fd.plot_streamlines(u, v, x, y, os.path.join(out, "streamlines.png"))
     fd.plot_pressure(p, x, y, os.path.join(out, "pressure.png"))
+    fd.plot_transient_animation(
+        snapshots,
+        x,
+        y,
+        os.path.join(out, "transient.gif"),
+        fps=5
+    )
+    fd.plot_transient_streamlines(
+    snapshots,
+    x,
+    y,
+    os.path.join(out, "transient_streamlines.gif"),
+    fps=5
+)
     if history["t"]:
         fd.plot_history(history, os.path.join(out, "history.png"))
     try:

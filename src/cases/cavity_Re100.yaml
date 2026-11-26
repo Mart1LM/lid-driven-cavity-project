@@ -1,10 +1,10 @@
 # Cavité entraînée, Re = 100 (adimensionné : Lx = Ly = U0 = rho = 1, donc nu = 1/Re)
 Lx: 1.0
 Ly: 1.0
-nx: 65
-ny: 65
+nx: 33
+ny: 33
 rho: 1.0
-Re: 50000.0
+Re: 1000.0
 U0: 1.0
 ramp_time: 0.0
 t_end: 40.0
@@ -21,3 +21,4 @@ omega: 1.7
 steady_tol: 1.0e-6      # 0.0 = critère d'arrêt désactivé
 every_n_steps: 100
 out_dir: results/
+snapshot_every_n_steps: 100  # fréquence de la visualisation transitoire

@@ -14,6 +14,7 @@ Convention : tous les champs ont la forme (nx, ny) et [i, j] <-> point (x[i], y[
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation, PillowWriter
  
  
 # ----------------------------------------------------------------- grille et champs
@@ -186,7 +187,200 @@ def plot_ghia_comparison(u, v, x, y, Re: float, path: str) -> None:
     fig.suptitle(f"Re = {Re:g}")
     fig.savefig(path, dpi=150)
     plt.close(fig)
+
+
  
+def plot_transient_animation(snapshots, x, y, path, fps=5):
+    """
+    Génère une animation GIF de l'évolution temporelle de l'écoulement.
+
+    Chaque snapshot contient :
+        t : instant de simulation
+        u : champ de vitesse horizontale
+        v : champ de vitesse verticale
+
+    Visualisation :
+        - norme de la vitesse en couleur
+        - vecteurs vitesse en superposition
+    """
+    if len(snapshots) < 2:
+        print("Animation ignorée : moins de deux snapshots.")
+        return
+
+    fig, ax = plt.subplots(figsize=(6, 5), constrained_layout=True)
+
+    # Échelle de couleur commune à toutes les images
+    vmax = max(
+        np.sqrt(s["u"]**2 + s["v"]**2).max()
+        for s in snapshots
+    )
+    vmax = max(vmax, 1e-12)
+
+    s = max(1, len(x) // 20)
+    X, Y = np.meshgrid(x, y, indexing="ij")
+
+    # Premier instant
+    first = snapshots[0]
+    speed = np.sqrt(first["u"]**2 + first["v"]**2)
+
+    im = ax.imshow(
+        speed.T,
+        origin="lower",
+        extent=[x[0], x[-1], y[0], y[-1]],
+        cmap="viridis",
+        vmin=0,
+        vmax=vmax,
+        animated=False
+    )
+
+    quiver = ax.quiver(
+        X[::s, ::s],
+        Y[::s, ::s],
+        first["u"][::s, ::s],
+        first["v"][::s, ::s],
+        color="white",
+        scale_units="xy"
+    )
+
+    fig.colorbar(im, ax=ax, label="|vitesse| (m/s)")
+
+    ax.set_xlabel("x (m)")
+    ax.set_ylabel("y (m)")
+    ax.set_aspect("equal")
+
+    title = ax.set_title(f"Écoulement transitoire - t = {first['t']:.3f} s")
+
+    def update(k):
+        nonlocal quiver
+
+        snap = snapshots[k]
+        speed = np.sqrt(snap["u"]**2 + snap["v"]**2)
+
+        im.set_data(speed.T)
+
+        quiver.remove()
+        quiver = ax.quiver(
+            X[::s, ::s],
+            Y[::s, ::s],
+            snap["u"][::s, ::s],
+            snap["v"][::s, ::s],
+            color="white",
+            scale_units="xy"
+        )
+
+        title.set_text(
+            f"Écoulement transitoire - t = {snap['t']:.3f} s"
+        )
+
+        return im, quiver, title
+
+    anim = FuncAnimation(
+        fig,
+        update,
+        frames=len(snapshots),
+        interval=1000 / fps,
+        blit=False
+    )
+
+    anim.save(path, writer=PillowWriter(fps=fps))
+    plt.close(fig)
+
+    print(f"Animation enregistrée : {path}")
+
+
+
+
+def plot_transient_streamlines(snapshots, x, y, path, fps=5):
+    """
+    Génère une animation GIF des lignes de courant au cours du temps.
+
+    Chaque snapshot contient :
+        t : instant de simulation
+        u : champ de vitesse horizontale
+        v : champ de vitesse verticale
+    """
+
+    if len(snapshots) < 2:
+        print("Animation des lignes de courant ignorée : "
+              "moins de deux snapshots.")
+        return
+
+    fig, ax = plt.subplots(figsize=(6, 5), constrained_layout=True)
+
+    # Échelle de couleur commune à toutes les images
+    vmax = max(
+        np.sqrt(s["u"]**2 + s["v"]**2).max()
+        for s in snapshots
+    )
+    vmax = max(vmax, 1e-12)
+
+    # Maillage
+    X, Y = np.meshgrid(x, y)
+
+    # Initialisation du graphique
+    def draw_frame(k):
+        ax.clear()
+
+        snap = snapshots[k]
+
+        speed = np.sqrt(snap["u"]**2 + snap["v"]**2)
+
+        # Fond coloré : norme de la vitesse
+        im = ax.imshow(
+            speed.T,
+            origin="lower",
+            extent=[x[0], x[-1], y[0], y[-1]],
+            cmap="viridis",
+            vmin=0,
+            vmax=vmax,
+            aspect="equal"
+        )
+
+        # Lignes de courant
+        ax.streamplot(
+            x,
+            y,
+            snap["u"].T,
+            snap["v"].T,
+            color="white",
+            density=1.5,
+            linewidth=0.9,
+            arrowsize=1
+        )
+
+        ax.set_xlabel("x (m)")
+        ax.set_ylabel("y (m)")
+        ax.set_xlim(x[0], x[-1])
+        ax.set_ylim(y[0], y[-1])
+        ax.set_aspect("equal")
+
+        ax.set_title(
+            f"Lignes de courant - t = {snap['t']:.3f} s"
+        )
+
+        # Barre de couleur
+        return im
+
+    # Animation
+    anim = FuncAnimation(
+        fig,
+        draw_frame,
+        frames=len(snapshots),
+        interval=1000 / fps,
+        blit=False,
+        repeat=False
+    )
+
+    anim.save(
+        path,
+        writer=PillowWriter(fps=fps)
+    )
+
+    plt.close(fig)
+
+    print(f"Animation des lignes de courant enregistrée : {path}")
+
+
  
 # ----------------------------------------------------------------- sauvegardes
 def save_fields(path: str, u, v, p, t: float, n: int) -> None:
