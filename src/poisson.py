@@ -56,6 +56,7 @@ try:
     from numba import njit
 except ImportError:                      # pas de numba : même code, en Python pur
     def njit(func):
+        print("error import numba")
         return func
 
 

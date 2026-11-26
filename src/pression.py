@@ -95,6 +95,7 @@ CHANGEMENTS D'INTERFACE À DISCUTER AVEC LE GROUPE
 (c) nouvelle clé optionnelle du .yml : pressure_scheme (défaut "centered2").
 """
 import numpy as np
+from numba import njit
 
 from schemas_espace import divergence, derivative_x, derivative_y
 from conditions_limite import apply_bc_velocity, apply_bc_pressure
@@ -112,7 +113,7 @@ PRESSURE_SPACE_SCHEMES = {
     "bwd_fwd":   {"div": "forward1",  "grad": "backward1"},
 }
 
-
+@njit
 def get_pressure_schemes(par):
     """
     Lit par["pressure_scheme"] et renvoie les deux noms de schémas à utiliser.
@@ -138,6 +139,7 @@ def get_pressure_schemes(par):
 # ==========================================================================
 # Sous-fonctions de l'étape 3
 # ==========================================================================
+@njit
 def compute_divergence(u, v, dx, dy, par):
     """
     Divergence de la vitesse avec le schéma choisi pour la pression.
@@ -156,7 +158,7 @@ def compute_divergence(u, v, dx, dy, par):
     div_scheme, _ = get_pressure_schemes(par)
     return divergence(u, v, dx, dy)
 
-
+@njit
 def compute_pressure_gradient(p, dx, dy, par):
     """
     Gradient de pression (dp/dx, dp/dy) avec le schéma choisi.
@@ -173,7 +175,7 @@ def compute_pressure_gradient(p, dx, dy, par):
     dpdy = derivative_y(p, dy)
     return dpdx, dpdy
 
-
+@njit
 def remove_mean(p):
     """
     Retire la moyenne de la pression (la pression n'est définie qu'à une
@@ -186,7 +188,7 @@ def remove_mean(p):
     """
     return p - np.mean(p)
 
-
+@njit
 def solve_pressure(div, p0, dt, dx, dy, par):
     """
     Résout l'équation de Poisson   laplacien(p) = rho/dt * div   (équation 3).
@@ -227,7 +229,7 @@ def solve_pressure(div, p0, dt, dx, dy, par):
     apply_bc_pressure(p)
     return p
 
-
+@njit
 def correct_velocity(u_2star, v_2star, p, t, dt, dx, dy, par):
     """
     Corrige la vitesse avec le gradient de pression (équation 1) :
@@ -263,6 +265,7 @@ def correct_velocity(u_2star, v_2star, p, t, dt, dx, dy, par):
 # ==========================================================================
 # Fonction principale de l'étape 3
 # ==========================================================================
+@njit
 def pressure_step(u_2star, v_2star, p, t, dt, dx, dy, par):
     """
     Étape 3 du pas fractionné : projection à divergence nulle.
@@ -293,6 +296,7 @@ def pressure_step(u_2star, v_2star, p, t, dt, dx, dy, par):
 # ==========================================================================
 # Outil de diagnostic (pour le rapport : comparer les schémas)
 # ==========================================================================
+@njit
 def projection_error(u, v, dx, dy, par):
     """
     Maximum de |div| mesuré avec le schéma de divergence de la pression.

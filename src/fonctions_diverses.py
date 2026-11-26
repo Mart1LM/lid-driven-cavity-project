@@ -14,7 +14,7 @@ Convention : tous les champs ont la forme (nx, ny) et [i, j] <-> point (x[i], y[
 import os
 import numpy as np
 import matplotlib.pyplot as plt
- 
+from numba import njit
  
 # ----------------------------------------------------------------- grille et champs
 def make_grid(par: dict):
@@ -33,6 +33,7 @@ def init_fields(nx: int, ny: int):
  
  
 # ----------------------------------------------------------------- pas de temps
+@njit
 def compute_dt(u: np.ndarray, v: np.ndarray, dx: float, dy: float, par: dict) -> float:
     """Plus grand pas de temps admissible (coefficients de sécurité cfl et fourier).
  
@@ -52,11 +53,12 @@ def compute_dt(u: np.ndarray, v: np.ndarray, dx: float, dy: float, par: dict) ->
  
  
 # ----------------------------------------------------------------- diagnostics
+@njit
 def kinetic_energy(u: np.ndarray, v: np.ndarray, dx: float, dy: float) -> float:
     """Énergie cinétique par unité de masse : 1/2 * somme(u^2 + v^2) * dx * dy."""
     return float(0.5 * np.sum(u ** 2 + v ** 2) * dx * dy)
  
- 
+@njit
 def max_divergence(u: np.ndarray, v: np.ndarray, dx: float, dy: float) -> float:
     """Max de |div u| sur les nœuds intérieurs : mesure la qualité de la projection.
     Utilise schemas_espace.divergence (fichier d'un coéquipier)."""
@@ -64,7 +66,7 @@ def max_divergence(u: np.ndarray, v: np.ndarray, dx: float, dy: float) -> float:
     d = divergence(u, v, dx, dy)
     return float(np.abs(d[1:-1, 1:-1]).max())
  
- 
+@njit
 def steady_residual(u: np.ndarray, u_new: np.ndarray, dt: float) -> float:
     """res_steady = max|u_new - u| / dt : tend vers 0 quand l'écoulement devient stationnaire."""
     return float(np.abs(u_new - u).max() / dt)
@@ -89,7 +91,8 @@ def ghia_reference(Re: float, data_dir: str = "data") -> dict:
     x, v = np.loadtxt(fv, delimiter=";", skiprows=0, unpack=True)
     return {"y": y, "u": u, "x": x, "v": v}
  
- 
+
+@njit
 def centerline_profiles(u: np.ndarray, v: np.ndarray, x: np.ndarray, y: np.ndarray):
     """Profils sur les lignes médianes, par interpolation linéaire entre nœuds.
  
