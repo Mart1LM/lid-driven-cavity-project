@@ -33,7 +33,7 @@ def init_fields(nx: int, ny: int):
  
  
 # ----------------------------------------------------------------- pas de temps
-@njit
+
 def compute_dt(u: np.ndarray, v: np.ndarray, dx: float, dy: float, par: dict) -> float:
     """Plus grand pas de temps admissible (coefficients de sécurité cfl et fourier).
  

@@ -42,7 +42,7 @@ CONVENTIONS (voir INTERFACES.md)
   pression.py. t est l'instant au DÉBUT du pas.
 """
 
-from numba import njit
+
 
 from schemas_temps_explicite import get_time_scheme
 from conditions_limite import apply_bc_velocity
@@ -53,7 +53,7 @@ from schemas_espace import SPACE_SCHEMES
 # Vide pour l'instant (exemple futur : "lax_wendroff": advection_lax_wendroff).
 COUPLED_ADVECTION_STEPS = {}
 
-@njit
+
 def convective_term(phi, u, v, dx, dy, scheme):
     """
     Calcule u·dphi/dx + v·dphi/dy avec le schema choisi par son nom.
@@ -83,7 +83,7 @@ def convective_term(phi, u, v, dx, dy, scheme):
         raise ValueError(f"Schema d'espace inconnu : {scheme}")
     return SPACE_SCHEMES[scheme](phi, u, v, dx, dy)
 
-@njit
+
 def F_advection(q, dx, dy, par):
     """
     Second membre de l'équation de transport : dq/dt = F(q) = -(u.grad)q.
@@ -101,7 +101,7 @@ def F_advection(q, dx, dy, par):
     dv_dt = -convective_term(v, u, v, dx, dy, scheme)   # transport de v
     return du_dt, dv_dt
 
-@njit
+
 def advection_method_of_lines(u, v, t, dt, dx, dy, par):
     """
     Avance de dt par « méthode des lignes » : schéma en temps appliqué à F_advection,
@@ -109,7 +109,7 @@ def advection_method_of_lines(u, v, t, dt, dx, dy, par):
     """
     time_step = get_time_scheme(par["time_scheme"])
 
-@njit
+
 def F(q):  #truc bizarre ici
     return F_advection(q, dx, dy, par)
 
@@ -117,7 +117,7 @@ def F(q):  #truc bizarre ici
     apply_bc_velocity(u_star, v_star, t + dt, par)      # en place, sur nos tableaux
     return u_star, v_star
 
-@njit
+
 def advection_step(u, v, t, dt, dx, dy, par):
     """
     Étape 1 du pas fractionné : avance de dt l'équation

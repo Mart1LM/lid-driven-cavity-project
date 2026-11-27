@@ -14,7 +14,6 @@ import numpy as np
 from numba import njit
 
 
-@njit 
 def lid_velocity(t: float, par: dict) -> float:
     """Vitesse du couvercle à l'instant t.
  
@@ -26,8 +25,9 @@ def lid_velocity(t: float, par: dict) -> float:
     if ramp <= 0.0 or t >= ramp:
         return par["U0"]
     return par["U0"] * 0.5 * (1.0 - np.cos(np.pi * t / ramp))
- 
-@njit 
+
+
+
 def apply_bc_velocity(u: np.ndarray, v: np.ndarray, t: float, par: dict) -> None:
     """Impose la vitesse sur les nœuds de paroi (modification EN PLACE).
  
@@ -43,7 +43,9 @@ def apply_bc_velocity(u: np.ndarray, v: np.ndarray, t: float, par: dict) -> None
     v[:, 0] = 0.0
     v[:, -1] = 0.0
     u[:, -1] = lid_velocity(t, par)      # en dernier : les coins du haut valent U(t)
- 
+
+
+
 @njit 
 def apply_bc_pressure(p: np.ndarray) -> None:
     """Condition dp/dn = 0 sur les quatre parois, par recopie du voisin intérieur

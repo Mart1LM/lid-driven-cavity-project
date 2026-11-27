@@ -41,9 +41,8 @@ from schemas_temps_explicite import get_time_scheme
 from conditions_limite import apply_bc_velocity
 from ADI import diffusion_adi
 
-from numba import njit
 
-@njit
+
 def F_diffusion(q, dx, dy, par):
     """
     Second membre de l'équation de diffusion : dq/dt = F(q) = nu * laplacien(q).
@@ -61,7 +60,7 @@ def F_diffusion(q, dx, dy, par):
     dv_dt = nu * laplacian(v, dx, dy)
     return du_dt, dv_dt
 
-@njit
+
 def diffusion_explicit(u_star, v_star, t, dt, dx, dy, par):
     """
     Diffusion explicite : schéma en temps (par["time_scheme"]) appliqué à
@@ -83,7 +82,7 @@ DIFFUSION_METHODS = {
     "explicit": diffusion_explicit, "adi": diffusion_adi
 }
 
-@njit
+
 def diffusion_step(u_star, v_star, t, dt, dx, dy, par):
     """
     Étape 2 du pas fractionné : avance de dt l'équation
